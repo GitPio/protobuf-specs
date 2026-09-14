@@ -1,0 +1,50 @@
+# syntax=docker/dockerfile-upstream:master
+# This container grabs the protoc compiler and the googleapi includes
+# /protobuf will contain the extracted protoc
+# /googleapis will contain the various googleapis proto imports one might need
+FROM debian:trixie-slim@sha256:d7e12182ce18b85b93007c1dedf31f2d29e01ccf3182cc4017c709b6259bc132 AS protoc-builder
+
+# Create output directories and install needed utilities
+RUN mkdir /protobuf /googleapis /grpc-gateway && \
+    apt-get update && apt-get install -y --no-install-recommends unzip git adduser ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set up user and group to match host we're building the container on
+ARG UID
+
+RUN adduser --uid ${UID} --disabled-password myuser
+
+# Set permissions on the output directories so the user can write to them
+RUN chown myuser /protobuf /googleapis /grpc-gateway
+
+# Switch to user to execute the remaining commands
+USER myuser
+
+# Download specific release of protoc
+# TODO: add dependabot-like feature to check for release updates
+ARG PROTOC_VERSION
+ARG PROTOC_CHECKSUM
+
+ADD --chown=myuser --checksum=${PROTOC_CHECKSUM} https://github.com/protocolbuffers/protobuf/releases/download/${PROTOC_VERSION}/protoc-${PROTOC_VERSION#v}-linux-x86_64.zip /tmp/protoc.zip
+RUN unzip -d /protobuf /tmp/protoc.zip && \
+    chmod 755 /protobuf/bin/protoc && \
+    rm /tmp/protoc.zip
+
+# fetch specific commit of googleapis (shallow fetch to avoid downloading full history)
+ARG GOOGLEAPIS_COMMIT
+RUN git init /googleapis && cd /googleapis && \
+    git remote add origin https://github.com/googleapis/googleapis.git && \
+    git fetch --depth=1 origin ${GOOGLEAPIS_COMMIT} && \
+    git checkout FETCH_HEAD && rm -rf .git
+# fetch sparse checkout of grpc-gateway to add openapiv2/options
+ARG GRPC_GATEWAY_COMMIT
+RUN git init /grpc-gateway && cd /grpc-gateway && \
+    git remote add origin https://github.com/grpc-ecosystem/grpc-gateway.git && \
+    git sparse-checkout set protoc-gen-openapiv2/options && \
+    git fetch --depth=1 origin ${GRPC_GATEWAY_COMMIT} && \
+    git checkout FETCH_HEAD && rm -rf .git
+
+FROM scratch
+COPY --from=protoc-builder /protobuf /protobuf
+COPY --from=protoc-builder /googleapis /googleapis
+COPY --from=protoc-builder /grpc-gateway /grpc-gateway

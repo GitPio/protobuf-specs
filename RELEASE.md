@@ -62,6 +62,8 @@ Checklist prior to releasing:
    `version` matches the targeted release.
 1. Update [package.json](gen/pb-typescript/package.json) so the
     `version` matches the targeted release.
+    - Run `npm install` from the "gen/pb-typescript" directory to sync the
+     version change to the `package-lock.json` file.
 1. Update [version.rb](gen/pb-ruby/lib/sigstore_protobuf_specs/version.rb) so the
    `version` matches the targeted release.
 1. Update [Cargo.toml](gen/pb-rust/Cargo.toml) so the
@@ -115,7 +117,3 @@ Prepare a tag with the following pattern `release/typescript/vX.Y.Z` and
 push it. The [workflow](.github/workflows/typescript-release.yml)
 will automatically start.
 
-### JSON Schema
-
-Prepare a tag with the pattern `release/jsonschema/vX.Y.Z` and push it.
-No workflow is required.

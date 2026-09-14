@@ -1,0 +1,23 @@
+FROM node:26@sha256:f5d1cc40abc10c2843339a2134d07817cf33c405cb16bfd052b0ed790254c3a3 AS typescript-builder
+RUN mkdir /app
+COPY hack/package*.json /app
+WORKDIR /app
+
+# this flattens the node_modules in a way similar to the global install (which we'll (ab)use in a second)
+RUN npm ci --install-strategy=shallow
+
+# /usr/bin/env is called from ts-proto but not in distroless by default; we use busybox for this
+FROM gcr.io/distroless/base-debian13:debug-nonroot@sha256:9190d2d37515c88b09ea68bd99acb8962904d38a504a54edc6bedcd2ce11742a AS env-source
+
+FROM gcr.io/distroless/nodejs24-debian13:nonroot@sha256:774b7d020b24214835769e24c3544835526cd0288f0b094eae48e8b2c2429a79
+
+# node is installed in a non-default location in distroless
+ENV PATH=$PATH:/nodejs/bin
+
+COPY --from=typescript-builder /app/node_modules /usr/local/lib/node_modules
+COPY --from=env-source /busybox/busybox /usr/bin/env
+COPY --from=protoc-base:typescript /protobuf/bin/protoc /usr/local/bin/
+COPY --from=protoc-base:typescript /protobuf/include/google /opt/include/google
+COPY --from=protoc-base:typescript /googleapis /googleapis
+
+ENTRYPOINT ["/usr/local/bin/protoc", "--plugin=/usr/local/lib/node_modules/ts-proto/protoc-gen-ts_proto", "--ts_proto_opt=protoJsonFormat=false"]

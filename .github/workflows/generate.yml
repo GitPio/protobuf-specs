@@ -20,13 +20,8 @@ permissions:
 
 on:
   push:
-    paths:
-      - '**.proto'
-      - 'gen/**'
-  pull_request:
-    paths:
-      - '**.proto'
-      - 'gen/**'
+    branches: [main]
+  pull_request: {}
 
 jobs:
   check_generated_protos:
@@ -34,7 +29,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
 
     # clear out the generated files directory so we know we are actually
     # generating all the files again (instead of a subset)

@@ -20,35 +20,37 @@ on:
 
 name: Release TypeScript package
 
-permissions:
-  contents: read
-  id-token: write
+permissions: {}
 
 jobs:
   publish:
     name: Publish package to npmjs
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # needed to sign provenance
     defaults:
       run:
         working-directory: gen/pb-typescript
     steps:
     - name: Checkout source
-      uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
-    - name: Setup node
-      uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
-        node-version: 18
+        persist-credentials: false
+    - name: Setup node
+      uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      with:
+        node-version: 24
         registry-url: 'https://registry.npmjs.org'
-        cache: npm
-        cache-dependency-path: gen/pb-typescript/package-lock.json
+        package-manager-cache: false
+    - name: Install npm w/ OIDC support
+      run: |
+        npm install -g npm@">=11.5.0"
     - name: Build package
       run: |
         npm ci
         npm run build
     - name: Publish package
       run: |
-        npm install -g npm@latest
         npm publish --provenance --access public
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
 

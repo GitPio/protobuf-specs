@@ -20,23 +20,19 @@ permissions:
 
 on:
   push:
-    paths:
-      - '**.proto'
-      - 'gen/pb-ruby/**'
-  pull_request:
-    paths:
-      - '**.proto'
-      - 'gen/pb-ruby/**'
+    branches: [main]
+  pull_request: {}
 
 jobs:
   build:
+    name: Build Ruby generated code
     strategy:
       matrix:
-        python-version:
-        - '2.7'
-        - '3.0'
-        - '3.1'
+        ruby-version:
         - '3.2'
+        - '3.3'
+        - '3.4'
+        - '4.0'
       fail-fast: false
 
     runs-on: ubuntu-latest
@@ -45,11 +41,13 @@ jobs:
         working-directory: gen/pb-ruby
 
     steps:
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
-      - name: Set up Ruby ${{ matrix.python-version }}
-        uses: ruby/setup-ruby@0cde4689ba33c09f1b890c1725572ad96751a3fc # v1.178.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ruby-version: ${{ matrix.python-version }}
+          persist-credentials: false
+      - name: Set up Ruby ${{ matrix.ruby-version }}
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
 
       - name: Build
         run: |

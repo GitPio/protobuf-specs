@@ -20,19 +20,15 @@ permissions:
 
 on:
   push:
-    paths:
-      - "**.proto"
-      - "gen/pb-rust/**"
-  pull_request:
-    paths:
-      - "**.proto"
-      - "gen/pb-rust/**"
+    branches: [main]
+  pull_request: {}
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
   build:
+    name: Build Rust generated code
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -42,14 +38,19 @@ jobs:
           - nightly
 
     steps:
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
-      - run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: rustup update ${TOOLCHAIN} && rustup default ${TOOLCHAIN}
+        env:
+          TOOLCHAIN: ${{ matrix.toolchain }}
       - run: |
           make rust
       - run: |
-          RUST_ACTION="publish -p sigstore_protobuf_specs --dry-run" make rust
+          RUST_ACTION="build -p sigstore_protobuf_specs" make rust
 
   test:
+    name: Test Rust generated code
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -57,7 +58,11 @@ jobs:
           - stable
 
     steps:
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
-      - run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: rustup update ${TOOLCHAIN} && rustup default ${TOOLCHAIN}
+        env:
+          TOOLCHAIN: ${{ matrix.toolchain }}
       - run: |
           make rust RUST_ACTION=test

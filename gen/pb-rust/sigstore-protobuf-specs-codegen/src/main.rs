@@ -14,8 +14,10 @@ fn protobuf_include_path() -> String {
 fn main() -> anyhow::Result<()> {
     let includes = vec![
         concat!(env!("CARGO_MANIFEST_DIR"), "/../../../protos").to_owned(),
+        concat!(env!("CARGO_MANIFEST_DIR"), "/../../../service-protos").to_owned(),
         // WKTs path
         protobuf_include_path(),
+        "/googleapis".to_owned(),
         // googleapis types path: set `SIGSTORE_PROTOBUF_EXTRA_INCLUDE` to override.
         std::env::var("SIGSTORE_PROTOBUF_EXTRA_INCLUDE").unwrap_or("/opt/include".to_owned()),
     ];
@@ -38,18 +40,26 @@ fn main() -> anyhow::Result<()> {
         .disable_comments([".io.intoto.Envelope"])
         .out_dir("sigstore-protobuf-specs/src/generated/");
 
+    let protos = glob::glob(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../../protos/*.proto"
+    ))
+    .expect("no protos found!")
+    .flatten();
+
+    let service_protos = glob::glob(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../../service-protos/rekor/v2/*.proto"
+    ))
+    .expect("no service protos found!")
+    .flatten();
+
     prost_reflect_build::Builder::new()
         .file_descriptor_set_bytes("crate::FILE_DESCRIPTOR_SET_BYTES")
         .file_descriptor_set_path("sigstore-protobuf-specs/src/generated/file_descriptor_set.bin")
         .compile_protos_with_config(
             config,
-            &glob::glob(concat!(
-                env!("CARGO_MANIFEST_DIR"),
-                "/../../../protos/*.proto"
-            ))
-            .expect("no protos found!")
-            .flatten()
-            .collect::<Vec<_>>(),
+            &protos.chain(service_protos).collect::<Vec<_>>(),
             &includes,
         )?;
 

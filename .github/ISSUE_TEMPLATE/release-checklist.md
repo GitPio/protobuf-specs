@@ -15,8 +15,9 @@ Full release instructions are at: [RELEASE.md](/sigstore/protobuf-specs/blob/mai
 - [ ] Update [CHANGELOG](/sigstore/protobuf-specs/blob/main/CHANGELOG.md)
 - [ ] Update [pyproject.toml](/sigstore/protobuf-specs/blob/main/gen/pb-python/pyproject.toml) so the `version` matches the targeted release
 - [ ] Update [package.json](/sigstore/protobuf-specs/blob/main/gen/pb-typescript/package.json) so the `version` matches the targeted release
+- [ ] Run `npm install` from the `gen/pb-typescript` directory to update [package-lock.json](/sigstore/protobuf-specs/blob/main/gen/pb-typescript/package-lock.json)
 - [ ] Update [version.rb](/sigstore/protobuf-specs/blob/main/gen/pb-ruby/lib/sigstore_protobuf_specs/version.rb) so the `version` matches the targeted release
-- [ ] Update [Cargo.toml](/sigstore/protobuf-specs/blob/main/gen/pb-rust/Cargo.toml) so the `version` matches the targeted release
+- [ ] Update [Cargo.toml](/sigstore/protobuf-specs/blob/main/gen/pb-rust/sigstore-protobuf-specs/Cargo.toml) so the `version` matches the targeted release
 
 ## Tag Release
 - [ ] `v<version>`
@@ -25,7 +26,7 @@ Full release instructions are at: [RELEASE.md](/sigstore/protobuf-specs/blob/mai
 - [ ] `release/ruby/v<version>`
 - [ ] `release/rust/v<version>`
 - [ ] `release/typescript/v<version>`
-- [ ] `release/jsonschema/v<version>`
+- [ ] `release/service-builder/v<version>`
 
 ## Publish Release
 - [ ] Java to Maven Central
@@ -36,3 +37,4 @@ Full release instructions are at: [RELEASE.md](/sigstore/protobuf-specs/blob/mai
 - [ ] [Ruby](https://rubygems.org/gems/sigstore_protobuf_specs)
 - [ ] [Rust](https://crates.io/crates/sigstore_protobuf_specs)
 - [ ] [Typescript](https://www.npmjs.com/package/@sigstore/protobuf-specs)
+- [ ] [Service Builder Container](https://github.com/sigstore/protobuf-specs/pkgs/container/protobuf-specs-service-builder)

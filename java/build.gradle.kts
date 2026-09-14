@@ -1,8 +1,10 @@
 plugins {
     `java-library`
     `maven-publish`
-    id("dev.sigstore.sign") version "0.10.0"
-    id("com.diffplug.spotless") version "6.25.0"
+    id("dev.sigstore.sign") version "2.2.0"
+    id("com.diffplug.spotless") version "8.10.0"
+    id("com.gradleup.nmcp") version "1.6.1"
+    id("com.gradleup.nmcp.aggregation") version "1.6.1"
     `signing`
 }
 
@@ -15,7 +17,8 @@ repositories {
 sourceSets {
     main {
         resources {
-            srcDirs("../protos")
+            srcDirs("../protos", "../service-protos")
+            include("**/*.proto")
         }
     }
 }
@@ -40,7 +43,7 @@ spotless {
         target("*.md", ".gitignore", "**/*.yaml")
 
         trimTrailingWhitespace()
-        indentWithSpaces()
+        leadingTabsToSpaces()
         endWithNewline()
     }
     // we have no non-generated java code
@@ -94,25 +97,6 @@ publishing {
             }
         }
     }
-    repositories {
-        maven {
-            name = "releaseStaging"
-            url = uri(layout.buildDirectory.dir("releaseStaging"))
-        }
-    }
-}
-
-tasks.register<Jar>("createReleaseBundle") {
-    dependsOn("publishProtoPublicationToReleaseStagingRepository")
-    from(layout.buildDirectory.dir("releaseStaging/dev/sigstore/protobuf-specs/$version")) {
-        include("*.jar")
-        include("*.pom")
-        include("*.module")
-        include("*.sigstore")
-        include("*.sigstore.json")
-        include("*.asc")
-    }
-    archiveFileName = "${project.name}-${project.version}-bundle.jar"
 }
 
 signing {
@@ -138,4 +122,17 @@ tasks.withType<dev.sigstore.sign.tasks.SigstoreSignFilesTask>().configureEach {
     onlyIf("Sigstore Signing is not skipped") {
         !project.hasProperty("skipSigstoreSigning")
     }
+}
+
+nmcpAggregation {
+    centralPortal {
+        username = providers.environmentVariable("CENTRAL_PORTAL_USERNAME")
+        password = providers.environmentVariable("CENTRAL_PORTAL_PASSWORD")
+        publishingType = "USER_MANAGED"
+        publicationName = "sigstore protobuf-specs $version"
+    }
+}
+
+dependencies {
+    nmcpAggregation(project)
 }
